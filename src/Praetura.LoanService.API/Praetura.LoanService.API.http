@@ -1,6 +1,85 @@
 @Praetura.LoanService.API_HostAddress = http://localhost:5192
 
-GET {{Praetura.LoanService.API_HostAddress}}/weatherforecast/
+### 1. Submit a valid application (the example from the brief).
+### Expect 201 Created, status "Pending", and a Location header pointing at the new application.
+# @name createApplication
+POST {{Praetura.LoanService.API_HostAddress}}/loan-applications
+Content-Type: application/json
+
+{
+  "name": "Alice Example",
+  "email": "alice@example.com",
+  "monthlyIncome": 3500,
+  "requestedAmount": 8000,
+  "termMonths": 36
+}
+
+### 2. Fetch the application created above.
+### Right after step 1 it is "Pending" with an empty decisionLog. Within the processing interval (60 seconds by default)
+### it becomes "Approved" with three decisionLog entries and a reviewedAt time.
+@applicationId = {{createApplication.response.body.$.id}}
+
+GET {{Praetura.LoanService.API_HostAddress}}/loan-applications/{{applicationId}}
 Accept: application/json
+
+### 3. An application that is valid input but fails the eligibility rules.
+### Accepted with 201 (term of 6 is not "invalid data"); the background job later sets it to "Rejected".
+POST {{Praetura.LoanService.API_HostAddress}}/loan-applications
+Content-Type: application/json
+
+{
+  "name": "Bob Example",
+  "email": "bob@example.com",
+  "monthlyIncome": 1500,
+  "requestedAmount": 9000,
+  "termMonths": 6
+}
+
+### 4. Unknown application id. Expect 404 Not Found.
+GET {{Praetura.LoanService.API_HostAddress}}/loan-applications/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### 5. Not a valid GUID. Expect 404 Not Found (the route does not match).
+GET {{Praetura.LoanService.API_HostAddress}}/loan-applications/not-a-guid
+Accept: application/json
+
+### 6. Negative amount. Expect 400 Bad Request with a field-level error for requestedAmount.
+POST {{Praetura.LoanService.API_HostAddress}}/loan-applications
+Content-Type: application/json
+
+{
+  "name": "Carol Example",
+  "email": "carol@example.com",
+  "monthlyIncome": 3500,
+  "requestedAmount": -100,
+  "termMonths": 36
+}
+
+### 7. Malformed email. Expect 400 Bad Request with an error for email.
+POST {{Praetura.LoanService.API_HostAddress}}/loan-applications
+Content-Type: application/json
+
+{
+  "name": "Dave Example",
+  "email": "not-an-email",
+  "monthlyIncome": 3500,
+  "requestedAmount": 8000,
+  "termMonths": 36
+}
+
+### 8. Missing and null fields. Expect 400 Bad Request listing every missing field.
+POST {{Praetura.LoanService.API_HostAddress}}/loan-applications
+Content-Type: application/json
+
+{
+  "name": null,
+  "email": "eve@example.com"
+}
+
+### 9. Empty JSON object. Expect 400 Bad Request listing every required field.
+POST {{Praetura.LoanService.API_HostAddress}}/loan-applications
+Content-Type: application/json
+
+{}
 
 ###
