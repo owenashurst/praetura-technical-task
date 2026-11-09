@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Praetura.LoanService.API.Features.LoanApplications.CreateLoanApplication;
+using Praetura.LoanService.API.Features.LoanApplications.GetLoanApplication;
 
 namespace Praetura.LoanService.API.Features.LoanApplications;
 
 [ApiController]
 [Route("loan-applications")]
-public class LoanApplicationsController(ICreateLoanApplicationHandler createHandler) : ControllerBase
+public class LoanApplicationsController(
+    ICreateLoanApplicationHandler createHandler,
+    IGetLoanApplicationHandler getHandler) : ControllerBase
 {
     [HttpPost]
     [ProducesResponseType(typeof(CreateLoanApplicationResponse), StatusCodes.Status201Created)]
@@ -22,7 +25,15 @@ public class LoanApplicationsController(ICreateLoanApplicationHandler createHand
 
         var response = result.Response!;
 
-        // TODO: switch to CreatedAtAction once the Get action exists.
-        return Created($"/loan-applications/{response.Id}", response);
+        return CreatedAtAction(nameof(Get), new { id = response.Id }, response);
+    }
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(LoanApplicationResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
+    {
+        var response = await getHandler.HandleAsync(id, cancellationToken);
+        return response is null ? NotFound() : Ok(response);
     }
 }
