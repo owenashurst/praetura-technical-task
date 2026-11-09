@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Praetura.LoanService.Domain.Repositories;
 using Praetura.LoanService.Infrastructure.Persistence;
+using Praetura.LoanService.Infrastructure.Persistence.Repositories;
 
 namespace Praetura.LoanService.Infrastructure;
 
@@ -11,6 +13,7 @@ public static class DependencyInjection
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
 
         services.AddDbContext<LoanServiceDbContext>(options => options.UseSqlite(connectionString));
+        services.AddScoped<ILoanApplicationRepository, LoanApplicationRepository>();
 
         return services;
     }
