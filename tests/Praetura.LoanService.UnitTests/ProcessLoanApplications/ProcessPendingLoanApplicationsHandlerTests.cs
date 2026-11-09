@@ -7,6 +7,7 @@ using Praetura.LoanService.Domain.Eligibility;
 using Praetura.LoanService.Domain.Entities;
 using Praetura.LoanService.Domain.Enums;
 using Praetura.LoanService.Domain.Repositories;
+using Praetura.LoanService.UnitTests.Support;
 
 namespace Praetura.LoanService.UnitTests.ProcessLoanApplications;
 
@@ -144,9 +145,4 @@ public class ProcessPendingLoanApplicationsHandlerTests
             TermMonths = termMonths,
             CreatedAt = new DateTime(2025, 5, 27, 10, 30, 0, DateTimeKind.Utc)
         };
-
-    private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => utcNow;
-    }
 }

@@ -6,6 +6,7 @@ using Praetura.LoanService.API.ErrorHandling;
 using Praetura.LoanService.API.Features.LoanApplications.CreateLoanApplication;
 using Praetura.LoanService.API.Features.LoanApplications.GetLoanApplication;
 using Praetura.LoanService.API.Features.LoanApplications.ProcessLoanApplications;
+using Praetura.LoanService.API.Features.Outbox.PublishOutboxMessages;
 using Praetura.LoanService.Domain.Eligibility;
 using Praetura.LoanService.Infrastructure;
 using Praetura.LoanService.Infrastructure.Persistence;
@@ -31,6 +32,11 @@ builder.Services.AddOptions<ProcessingOptions>()
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<ProcessingOptions>, ProcessingOptionsValidator>();
 
+builder.Services.AddOptions<OutboxOptions>()
+    .Bind(builder.Configuration.GetSection(nameof(OutboxOptions)))
+    .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<OutboxOptions>, OutboxOptionsValidator>();
+
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
@@ -40,6 +46,8 @@ builder.Services.AddScoped<ICreateLoanApplicationHandler, CreateLoanApplicationH
 builder.Services.AddScoped<IGetLoanApplicationHandler, GetLoanApplicationHandler>();
 builder.Services.AddScoped<IProcessPendingLoanApplicationsHandler, ProcessPendingLoanApplicationsHandler>();
 builder.Services.AddHostedService<LoanApplicationProcessingService>();
+builder.Services.AddScoped<IPublishOutboxMessagesHandler, PublishOutboxMessagesHandler>();
+builder.Services.AddHostedService<OutboxPublishingService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
