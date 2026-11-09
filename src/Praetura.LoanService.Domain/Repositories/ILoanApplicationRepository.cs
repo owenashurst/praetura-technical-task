@@ -29,14 +29,17 @@ public interface ILoanApplicationRepository
     Task<IReadOnlyList<LoanApplication>> GetPendingAsync(int batchSize, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Saves the decision for a reviewed application, including the decision log entries.
+    /// Saves the decision for a reviewed application, its new status, its decision log entries and the outbox
+    /// message announcing the decision.
     /// </summary>
     /// <param name="loanApplication"><see cref="LoanApplication"/>The loan application to save</param>
     /// <param name="decisionLog"><see cref="IReadOnlyCollection{T}"/>A list of decision logs for the loan application</param>
+    /// <param name="outboxMessage"><see cref="OutboxMessage"/>The message to publish about the decision</param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     Task SaveDecisionAsync(
         LoanApplication loanApplication,
         IReadOnlyCollection<DecisionLogEntry> decisionLog,
+        OutboxMessage outboxMessage,
         CancellationToken cancellationToken);
 }

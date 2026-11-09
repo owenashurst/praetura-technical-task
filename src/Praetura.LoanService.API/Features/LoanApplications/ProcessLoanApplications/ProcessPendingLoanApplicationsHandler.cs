@@ -66,7 +66,9 @@ public class ProcessPendingLoanApplicationsHandler(
         application.Status = assessment.IsEligible ? LoanApplicationStatus.Approved : LoanApplicationStatus.Rejected;
         application.ReviewedAt = evaluatedAt;
 
-        await loanApplicationRepository.SaveDecisionAsync(application, decisionLog, cancellationToken);
+        var outboxMessage = LoanApplicationDecisionMessage.Create(application, evaluatedAt);
+
+        await loanApplicationRepository.SaveDecisionAsync(application, decisionLog, outboxMessage, cancellationToken);
 
         logger.LogInformation(
             "Loan application {LoanApplicationId} was {Status}.",

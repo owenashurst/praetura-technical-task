@@ -18,11 +18,11 @@ public class ProcessPendingLoanApplicationsHandlerTests
     private readonly IEligibilityEvaluator _evaluator = new EligibilityEvaluator(new EligibilityOptions());
 
     [Fact]
-    public async Task GIVEN_HandleAsync_WHEN_ApplicationIsEligible_THEN_ItIsApprovedAndEveryRuleIsLogged()
+    public async Task GIVEN_HandleAsync_WHEN_ApplicationIsEligible_THEN_ItIsApprovedLoggedAndAnnounced()
     {
         var application = CreateApplication(monthlyIncome: 3_500m, requestedAmount: 8_000m, termMonths: 36);
         SetPending(application);
-        
+
         var handler = CreateHandler(_evaluator);
         var decided = await handler.HandleAsync(CancellationToken.None);
 
@@ -34,15 +34,20 @@ public class ProcessPendingLoanApplicationsHandlerTests
             Arg.Is<IReadOnlyCollection<DecisionLogEntry>>(log =>
                 log.Count == 3 &&
                 log.All(e => e.Passed && e.LoanApplicationId == application.Id && e.EvaluatedAt == Now.UtcDateTime)),
+            Arg.Is<OutboxMessage>(message =>
+                message.Type == LoanApplicationDecisionMessage.ApprovedType &&
+                message.CreatedAt == Now.UtcDateTime &&
+                message.PublishedAt == null &&
+                message.Payload.Contains(application.Id.ToString())),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task GIVEN_HandleAsync_WHEN_ApplicationIsNotEligible_THEN_ItIsRejectedAndEveryRuleIsLogged()
+    public async Task GIVEN_HandleAsync_WHEN_ApplicationIsNotEligible_THEN_ItIsRejectedLoggedAndAnnounced()
     {
         var application = CreateApplication(monthlyIncome: 1_000m, requestedAmount: 5_000m, termMonths: 6);
         SetPending(application);
-        
+
         var handler = CreateHandler(_evaluator);
         await handler.HandleAsync(CancellationToken.None);
 
@@ -51,6 +56,9 @@ public class ProcessPendingLoanApplicationsHandlerTests
         await _repository.Received(1).SaveDecisionAsync(
             application,
             Arg.Is<IReadOnlyCollection<DecisionLogEntry>>(log => log.Count == 3 && log.All(e => !e.Passed)),
+            Arg.Is<OutboxMessage>(message =>
+                message.Type == LoanApplicationDecisionMessage.RejectedType &&
+                message.Payload.Contains(application.Id.ToString())),
             Arg.Any<CancellationToken>());
     }
 
@@ -75,9 +83,15 @@ public class ProcessPendingLoanApplicationsHandlerTests
 
         Assert.Equal(1, decided);
         await _repository.DidNotReceive().SaveDecisionAsync(
-            failing, Arg.Any<IReadOnlyCollection<DecisionLogEntry>>(), Arg.Any<CancellationToken>());
+            failing,
+            Arg.Any<IReadOnlyCollection<DecisionLogEntry>>(),
+            Arg.Any<OutboxMessage>(),
+            Arg.Any<CancellationToken>());
         await _repository.Received(1).SaveDecisionAsync(
-            healthy, Arg.Any<IReadOnlyCollection<DecisionLogEntry>>(), Arg.Any<CancellationToken>());
+            healthy,
+            Arg.Any<IReadOnlyCollection<DecisionLogEntry>>(),
+            Arg.Any<OutboxMessage>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -86,17 +100,24 @@ public class ProcessPendingLoanApplicationsHandlerTests
         var failing = CreateApplication(monthlyIncome: 3_500m, requestedAmount: 8_000m, termMonths: 36);
         var healthy = CreateApplication(monthlyIncome: 3_500m, requestedAmount: 8_000m, termMonths: 36);
         SetPending(failing, healthy);
-        
+
         _repository
-            .SaveDecisionAsync(failing, Arg.Any<IReadOnlyCollection<DecisionLogEntry>>(), Arg.Any<CancellationToken>())
+            .SaveDecisionAsync(
+                failing,
+                Arg.Any<IReadOnlyCollection<DecisionLogEntry>>(),
+                Arg.Any<OutboxMessage>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Save failed."));
-        
+
         var handler = CreateHandler(_evaluator);
         var decided = await handler.HandleAsync(CancellationToken.None);
 
         Assert.Equal(1, decided);
         await _repository.Received(1).SaveDecisionAsync(
-            healthy, Arg.Any<IReadOnlyCollection<DecisionLogEntry>>(), Arg.Any<CancellationToken>());
+            healthy,
+            Arg.Any<IReadOnlyCollection<DecisionLogEntry>>(),
+            Arg.Any<OutboxMessage>(),
+            Arg.Any<CancellationToken>());
     }
 
     private ProcessPendingLoanApplicationsHandler CreateHandler(IEligibilityEvaluator evaluator) =>

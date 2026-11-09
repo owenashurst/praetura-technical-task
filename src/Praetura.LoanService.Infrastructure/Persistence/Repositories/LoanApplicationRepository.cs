@@ -30,6 +30,7 @@ public class LoanApplicationRepository(LoanServiceDbContext dbContext) : ILoanAp
     public async Task SaveDecisionAsync(
         LoanApplication loanApplication,
         IReadOnlyCollection<DecisionLogEntry> decisionLog,
+        OutboxMessage outboxMessage,
         CancellationToken cancellationToken)
     {
         try
@@ -42,7 +43,10 @@ public class LoanApplicationRepository(LoanServiceDbContext dbContext) : ILoanAp
             entry.Property(a => a.ReviewedAt).IsModified = true;
             
             dbContext.DecisionLogEntries.AddRange(decisionLog);
-            
+
+            // Saved in the same transaction as the decision, so the message exists if and only if the decision does.
+            dbContext.OutboxMessages.Add(outboxMessage);
+
             await dbContext.SaveChangesAsync(cancellationToken);
         }
         finally
