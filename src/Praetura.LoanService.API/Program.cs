@@ -38,6 +38,8 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddScoped<ICreateLoanApplicationHandler, CreateLoanApplicationHandler>();
 builder.Services.AddScoped<IGetLoanApplicationHandler, GetLoanApplicationHandler>();
+builder.Services.AddScoped<IProcessPendingLoanApplicationsHandler, ProcessPendingLoanApplicationsHandler>();
+builder.Services.AddHostedService<LoanApplicationProcessingService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

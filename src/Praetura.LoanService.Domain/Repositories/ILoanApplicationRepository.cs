@@ -19,4 +19,24 @@ public interface ILoanApplicationRepository
     /// <param name="cancellationToken"></param>
     /// <returns><see cref="LoanApplication"/> A loan application if it exists, otherwise null</returns>
     Task<LoanApplication?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Retrieves a batch of pending loan applications, up to the specified batch size.
+    /// </summary>
+    /// <param name="batchSize"><see cref="int"/>The batch size to retrieve</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns><see cref="IReadOnlyList{T}"/>A list of pending loan applications</returns>
+    Task<IReadOnlyList<LoanApplication>> GetPendingAsync(int batchSize, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Saves the decision for a reviewed application, including the decision log entries.
+    /// </summary>
+    /// <param name="loanApplication"><see cref="LoanApplication"/>The loan application to save</param>
+    /// <param name="decisionLog"><see cref="IReadOnlyCollection{T}"/>A list of decision logs for the loan application</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task SaveDecisionAsync(
+        LoanApplication loanApplication,
+        IReadOnlyCollection<DecisionLogEntry> decisionLog,
+        CancellationToken cancellationToken);
 }

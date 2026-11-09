@@ -89,6 +89,8 @@ namespace Praetura.LoanService.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Status", "CreatedAt");
+
                     b.ToTable("LoanApplications", (string)null);
                 });
 

@@ -35,6 +35,9 @@ public class LoanApplicationConfiguration : IEntityTypeConfiguration<LoanApplica
         builder.Property(a => a.CreatedAt)
             .IsRequired();
 
+        // Supports the background job's query for retrieving pending applications
+        builder.HasIndex(a => new { a.Status, a.CreatedAt });
+
         builder.HasMany(a => a.DecisionLog)
             .WithOne(e => e.LoanApplication)
             .HasForeignKey(e => e.LoanApplicationId)
