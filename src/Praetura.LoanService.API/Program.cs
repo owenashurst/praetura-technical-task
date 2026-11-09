@@ -1,6 +1,13 @@
+using Praetura.LoanService.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+var connectionString = builder.Configuration.GetConnectionString("LoanService")
+    ?? throw new InvalidOperationException("Connection string 'LoanService' is not configured.");
+
+builder.Services.AddInfrastructure(connectionString);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
