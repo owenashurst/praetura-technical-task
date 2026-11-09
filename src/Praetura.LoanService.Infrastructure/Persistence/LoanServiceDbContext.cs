@@ -8,6 +8,7 @@ public class LoanServiceDbContext(DbContextOptions<LoanServiceDbContext> options
 {
     public DbSet<LoanApplication> LoanApplications => Set<LoanApplication>();
     public DbSet<DecisionLogEntry> DecisionLogEntries => Set<DecisionLogEntry>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

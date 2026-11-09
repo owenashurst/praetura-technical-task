@@ -94,6 +94,36 @@ namespace Praetura.LoanService.Infrastructure.Persistence.Migrations
                     b.ToTable("LoanApplications", (string)null);
                 });
 
+            modelBuilder.Entity("Praetura.LoanService.Domain.Entities.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_OutboxMessages_CreatedAt_Unpublished")
+                        .HasFilter("\"PublishedAt\" IS NULL");
+
+                    b.ToTable("OutboxMessages", (string)null);
+                });
+
             modelBuilder.Entity("Praetura.LoanService.Domain.Entities.DecisionLogEntry", b =>
                 {
                     b.HasOne("Praetura.LoanService.Domain.Entities.LoanApplication", "LoanApplication")

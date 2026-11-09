@@ -14,6 +14,7 @@ public static class DependencyInjection
 
         services.AddDbContext<LoanServiceDbContext>(options => options.UseSqlite(connectionString));
         services.AddScoped<ILoanApplicationRepository, LoanApplicationRepository>();
+        services.AddScoped<IOutboxRepository, OutboxRepository>();
 
         return services;
     }
