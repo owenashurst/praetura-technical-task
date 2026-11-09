@@ -1,4 +1,6 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Praetura.LoanService.API.Features.LoanApplications.CreateLoanApplication;
 using Praetura.LoanService.Infrastructure;
 using Praetura.LoanService.Infrastructure.Persistence;
 
@@ -10,6 +12,10 @@ var connectionString = builder.Configuration.GetConnectionString("LoanService")
     ?? throw new InvalidOperationException("Connection string 'LoanService' is not configured.");
 
 builder.Services.AddInfrastructure(connectionString);
+
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+builder.Services.AddScoped<ICreateLoanApplicationHandler, CreateLoanApplicationHandler>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
